@@ -131,8 +131,34 @@ RxDrop (Ptr<const Packet> p)
 int 
 main (int argc, char *argv[])
 {
+  std::string tcpVariant = "TcpNewReno";             /* TCP variant type. */
+
   CommandLine cmd (__FILE__);
+  //cmd.AddValue ("payloadSize", "Payload size in bytes", payloadSize);
+  //cmd.AddValue ("dataRate", "Application data rate", dataRate);
+  cmd.AddValue ("tcpVariant", "Transport protocol to use: TcpNewReno, "
+                "TcpHybla, TcpHighSpeed, TcpHtcp, TcpVegas, TcpScalable, TcpVeno, "
+                "TcpBic, TcpYeah, TcpIllinois, TcpWestwood, TcpWestwoodPlus, TcpLedbat ", tcpVariant);
+  //cmd.AddValue ("phyRate", "Physical layer bitrate", phyRate);
+  //cmd.AddValue ("simulationTime", "Simulation time in seconds", simulationTime);
+  //cmd.AddValue ("pcap", "Enable/disable PCAP Tracing", pcapTracing);
   cmd.Parse (argc, argv);
+
+  // Select TCP variant
+  tcpVariant = std::string ("ns3::") + tcpVariant;
+  if (tcpVariant.compare ("ns3::TcpWestwoodPlus") == 0)
+    {
+      // TcpWestwoodPlus is not an actual TypeId name; we need TcpWestwood here
+      Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TcpWestwood::GetTypeId ()));
+      // the default protocol type in ns3::TcpWestwood is WESTWOOD
+      Config::SetDefault ("ns3::TcpWestwood::ProtocolType", EnumValue (TcpWestwood::WESTWOODPLUS));
+    }
+  else
+    {
+      TypeId tcpTid;
+      NS_ABORT_MSG_UNLESS (TypeId::LookupByNameFailSafe (tcpVariant, &tcpTid), "TypeId " << tcpVariant << " not found");
+      Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TypeId::LookupByName (tcpVariant)));
+    }
   
   NodeContainer nodes;
   nodes.Create (2);
