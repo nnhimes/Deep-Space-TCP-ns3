@@ -15,6 +15,11 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("tcpCompare");
 
+// Global Variables
+Time mostRecentSimTime;
+int simulationMaxTime = 500;
+
+// MyApp Definition
 class MyApp : public Application 
 {
 public:
@@ -120,6 +125,7 @@ static void
 CwndChange (uint32_t oldCwnd, uint32_t newCwnd)
 {
   NS_LOG_UNCOND (Simulator::Now ().GetSeconds () << "\t" << newCwnd);
+  mostRecentSimTime = Simulator::Now ();
 }
 
 static void
@@ -186,23 +192,25 @@ main (int argc, char *argv[])
   PacketSinkHelper packetSinkHelper ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), sinkPort));
   ApplicationContainer sinkApps = packetSinkHelper.Install (nodes.Get (1));
   sinkApps.Start (Seconds (0.));
-  sinkApps.Stop (Seconds (20.));
+  sinkApps.Stop (Seconds (simulationMaxTime)); //Global variable defined at top
 
   Ptr<Socket> ns3TcpSocket = Socket::CreateSocket (nodes.Get (0), TcpSocketFactory::GetTypeId ());
   ns3TcpSocket->TraceConnectWithoutContext ("CongestionWindow", MakeCallback (&CwndChange));
 
   Ptr<MyApp> app = CreateObject<MyApp> ();
-  app->Setup (ns3TcpSocket, sinkAddress, 1040, 1000, DataRate ("1Mbps"));
+  app->Setup (ns3TcpSocket, sinkAddress, 1040, 1000, DataRate ("1Mbps")); //Setup to send 1000 packets of size 1040 with a rate of 1Mbps. Total size: 1040000
   nodes.Get (0)->AddApplication (app);
-  app->SetStartTime (Seconds (1.));
-  app->SetStopTime (Seconds (20.));
+  app->SetStartTime (Seconds (1.)); //Must remain at 1 second so there is time to start up application and sockets
+  app->SetStopTime (Seconds (simulationMaxTime)); //Global variable defined at top
 
   devices.Get (1)->TraceConnectWithoutContext ("PhyRxDrop", MakeCallback (&RxDrop));
 
-  Simulator::Stop (Seconds (20));
+  Simulator::Stop (Seconds (simulationMaxTime)); //Global variable defined at top
+  Time startTime = Simulator::Now() + Seconds(1); //Add 1 because app->SetStartTime begins at 1 second
   Simulator::Run ();
   Simulator::Destroy ();
 
+  std::cout << "\nTotal simulation time (seconds): " << (mostRecentSimTime - startTime).GetSeconds () << "\n";
   return 0;
 }
 
