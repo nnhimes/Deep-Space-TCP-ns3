@@ -198,7 +198,8 @@ main (int argc, char *argv[])
   ns3TcpSocket->TraceConnectWithoutContext ("CongestionWindow", MakeCallback (&CwndChange));
 
   Ptr<MyApp> app = CreateObject<MyApp> ();
-  app->Setup (ns3TcpSocket, sinkAddress, 1040, 1000, DataRate ("1Mbps")); //Setup to send 1000 packets of size 1040 with a rate of 1Mbps. Total size: 1040000
+  app->Setup (ns3TcpSocket, sinkAddress, 1040, 1000, DataRate ("1Mbps")); //Setup to send 1000 packets of size 1040 with a rate of 1Mbps. Total size: 1040000 bytes
+  // 1040000 bytes == 8,320,000 bits. This / 1,000,000 bits per second = 8.32 seconds. This is what the simulation's total time is, so it works!
   nodes.Get (0)->AddApplication (app);
   app->SetStartTime (Seconds (1.)); //Must remain at 1 second so there is time to start up application and sockets
   app->SetStopTime (Seconds (simulationMaxTime)); //Global variable defined at top
