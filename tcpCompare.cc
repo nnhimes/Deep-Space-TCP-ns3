@@ -125,14 +125,20 @@ MyApp::ScheduleTx (void)
 static void
 CwndChange (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  NS_LOG_UNCOND (Simulator::Now ().GetSeconds () << "\t" << newCwnd);
-  mostRecentSimTime = Simulator::Now ();
+  NS_LOG_UNCOND ("Congestion window at " << Simulator::Now ().GetSeconds () << " is now: " << newCwnd);
 }
 
 static void
 RxDrop (Ptr<const Packet> p)
 {
   NS_LOG_UNCOND ("RxDrop at " << Simulator::Now ().GetSeconds ());
+}
+
+static void
+RxEnd (Ptr<const Packet> p)
+{
+  //NS_LOG_UNCOND ("RxEnd at " << Simulator::Now ().GetSeconds ());
+  mostRecentSimTime = Simulator::Now ();
 }
 
 int 
@@ -197,7 +203,7 @@ main (int argc, char *argv[])
   sinkApps.Stop (Seconds (simulationMaxTime)); //Global variable defined at top
 
   Ptr<Socket> ns3TcpSocket = Socket::CreateSocket (nodes.Get (0), TcpSocketFactory::GetTypeId ());
-  ns3TcpSocket->TraceConnectWithoutContext ("CongestionWindow", MakeCallback (&CwndChange));
+  ns3TcpSocket->TraceConnectWithoutContext ("CongestionWindow", MakeCallback (&CwndChange)); //Runs CwndChange() whenever the Congestion Window changes in the TCP socket
 
   Ptr<MyApp> app = CreateObject<MyApp> ();
   app->Setup (ns3TcpSocket, sinkAddress, 1040, 1000, DataRate ("1Mbps")); //Setup to send 1000 packets of size 1040 bytes with a rate of 1Mbps. Total size: 1040000 bytes
@@ -206,7 +212,8 @@ main (int argc, char *argv[])
   app->SetStartTime (Seconds (1.)); //Must remain at 1 second so there is time to start up application and sockets
   app->SetStopTime (Seconds (simulationMaxTime)); //Global variable defined at top
 
-  devices.Get (1)->TraceConnectWithoutContext ("PhyRxDrop", MakeCallback (&RxDrop));
+  devices.Get (1)->TraceConnectWithoutContext ("PhyRxDrop", MakeCallback (&RxDrop)); //Runs RxDrop() whenever PhyRxDrop happens on the devices
+  devices.Get (1)->TraceConnectWithoutContext ("PhyRxEnd", MakeCallback (&RxEnd)); //Runs RxEnd() whenever a packet has been completely received from the channel medium by the device
 
   Simulator::Stop (Seconds (simulationMaxTime)); //Global variable defined at top
   Time startTime = Simulator::Now() + Seconds(1); //Add 1 because app->SetStartTime begins at 1 second
