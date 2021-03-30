@@ -19,6 +19,7 @@ NS_LOG_COMPONENT_DEFINE ("tcpCompare");
 Time mostRecentSimTime;
 int simulationMaxTime = 500;
 Ptr<PacketSink> sink; //Used for average throughput calculations
+int packetDrops;
 
 // MyApp Definition
 class MyApp : public Application 
@@ -125,13 +126,14 @@ MyApp::ScheduleTx (void)
 static void
 CwndChange (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  NS_LOG_UNCOND ("Congestion window at " << Simulator::Now ().GetSeconds () << " is now: " << newCwnd);
+  //NS_LOG_UNCOND ("Congestion window at " << Simulator::Now ().GetSeconds () << " is now: " << newCwnd);
 }
 
 static void
 RxDrop (Ptr<const Packet> p)
 {
   NS_LOG_UNCOND ("RxDrop at " << Simulator::Now ().GetSeconds ());
+  packetDrops++;
 }
 
 static void
@@ -184,7 +186,7 @@ main (int argc, char *argv[])
   devices = pointToPoint.Install (nodes);
 
   Ptr<RateErrorModel> em = CreateObject<RateErrorModel> ();
-  em->SetAttribute ("ErrorRate", DoubleValue (0.0005));
+  em->SetAttribute ("ErrorRate", DoubleValue (0.0000025));
   devices.Get (1)->SetAttribute ("ReceiveErrorModel", PointerValue (em));
 
   InternetStackHelper stack;
@@ -224,6 +226,7 @@ main (int argc, char *argv[])
   std::cout << "\nTotal simulation time (seconds): " << totalSimTime.GetSeconds () << "\n";
   double averageThroughput = ((sink->GetTotalRx () * 8) / (1e6 * totalSimTime.GetSeconds ()));
   std::cout << "\nAverage throughput: " << averageThroughput << " Mbit/s" << std::endl;
+  std::cout << "\nPackets dropped: " << packetDrops << std::endl;
   return 0;
 }
 
