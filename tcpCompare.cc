@@ -125,7 +125,7 @@ MyApp::ScheduleTx (void)
 static void
 CwndChange (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  NS_LOG_UNCOND ("Congestion window at " << Simulator::Now ().GetSeconds () << " is now: " << newCwnd);
+  //NS_LOG_UNCOND ("Congestion window at " << Simulator::Now ().GetSeconds () << " is now: " << newCwnd);
 }
 
 static void
