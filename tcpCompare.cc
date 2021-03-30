@@ -19,6 +19,7 @@ NS_LOG_COMPONENT_DEFINE ("tcpCompare");
 Time mostRecentSimTime;
 int simulationMaxTime = 500;
 Ptr<PacketSink> sink; //Used for average throughput calculations
+int packetDrops;
 
 // MyApp Definition
 class MyApp : public Application 
@@ -132,6 +133,7 @@ static void
 RxDrop (Ptr<const Packet> p)
 {
   NS_LOG_UNCOND ("RxDrop at " << Simulator::Now ().GetSeconds ());
+  packetDrops++;
 }
 
 static void
@@ -224,6 +226,7 @@ main (int argc, char *argv[])
   std::cout << "\nTotal simulation time (seconds): " << totalSimTime.GetSeconds () << "\n";
   double averageThroughput = ((sink->GetTotalRx () * 8) / (1e6 * totalSimTime.GetSeconds ()));
   std::cout << "\nAverage throughput: " << averageThroughput << " Mbit/s" << std::endl;
+  std::cout << "\nPackets dropped: " << packetDrops << std::endl;
   return 0;
 }
 
