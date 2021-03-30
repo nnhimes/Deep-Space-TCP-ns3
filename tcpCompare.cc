@@ -186,7 +186,7 @@ main (int argc, char *argv[])
   devices = pointToPoint.Install (nodes);
 
   Ptr<RateErrorModel> em = CreateObject<RateErrorModel> ();
-  em->SetAttribute ("ErrorRate", DoubleValue (0.0005));
+  em->SetAttribute ("ErrorRate", DoubleValue (0.0000025));
   devices.Get (1)->SetAttribute ("ReceiveErrorModel", PointerValue (em));
 
   InternetStackHelper stack;
