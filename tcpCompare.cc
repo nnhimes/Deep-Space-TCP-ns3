@@ -20,6 +20,11 @@ Time mostRecentSimTime;
 long int simulationMaxTime = 9999999999999;
 Ptr<PacketSink> sink; //Used for average throughput calculations
 int packetDrops;
+int congestionWindowChanges;
+std::string tcpVariant = "TcpCubic";             /* TCP variant type. */
+std::string myDataRate = "50Mbps";
+double myErrorRate = 0.0000025;
+std::string myDelay = "261s";
 
 // MyApp Definition
 class MyApp : public Application 
@@ -126,7 +131,8 @@ MyApp::ScheduleTx (void)
 static void
 CwndChange (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  NS_LOG_UNCOND ("Congestion window at " << Simulator::Now ().GetSeconds () << " is now: " << newCwnd);
+  //NS_LOG_UNCOND ("Congestion window at " << Simulator::Now ().GetSeconds () << " is now: " << newCwnd);
+  congestionWindowChanges += 1;
 }
 
 static void
@@ -146,7 +152,7 @@ RxEnd (Ptr<const Packet> p)
 int 
 main (int argc, char *argv[])
 {
-  std::string tcpVariant = "TcpNewReno";             /* TCP variant type. */
+  //LogComponentEnable("TcpL4Protocol", LOG_LEVEL_LOGIC);
 
   CommandLine cmd (__FILE__);
   //cmd.AddValue ("payloadSize", "Payload size in bytes", payloadSize);
@@ -179,14 +185,14 @@ main (int argc, char *argv[])
   nodes.Create (2);
 
   PointToPointHelper pointToPoint;
-  pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("50Mbps"));
-  pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
+  pointToPoint.SetDeviceAttribute ("DataRate", StringValue (myDataRate));
+  pointToPoint.SetChannelAttribute ("Delay", StringValue (myDelay));
 
   NetDeviceContainer devices;
   devices = pointToPoint.Install (nodes);
 
   Ptr<RateErrorModel> em = CreateObject<RateErrorModel> ();
-  em->SetAttribute ("ErrorRate", DoubleValue (0.0000025));
+  em->SetAttribute ("ErrorRate", DoubleValue (myErrorRate));
   devices.Get (1)->SetAttribute ("ReceiveErrorModel", PointerValue (em));
 
   InternetStackHelper stack;
@@ -208,7 +214,7 @@ main (int argc, char *argv[])
   ns3TcpSocket->TraceConnectWithoutContext ("CongestionWindow", MakeCallback (&CwndChange)); //Runs CwndChange() whenever the Congestion Window changes in the TCP socket
 
   Ptr<MyApp> app = CreateObject<MyApp> ();
-  app->Setup (ns3TcpSocket, sinkAddress, 1500, 1000, DataRate ("50Mbps")); //Setup to send 1000 packets of size 1500 bytes with a rate of 50Mbps. Total size: 1.5MB
+  app->Setup (ns3TcpSocket, sinkAddress, 1500, 1000, DataRate (myDataRate)); //Setup to send 1000 packets of size 1500 bytes with a rate of 50Mbps. Total size: 1.5MB
   // 1500000 bytes == 12,000,000 bits. This / 50,000,000 bits per second = 0.24 seconds with low delay. This is what the simulation's total time is, so it works!
   nodes.Get (0)->AddApplication (app);
   app->SetStartTime (Seconds (1.)); //Must remain at 1 second so there is time to start up application and sockets
@@ -223,10 +229,12 @@ main (int argc, char *argv[])
   Simulator::Destroy ();
 
   Time totalSimTime = mostRecentSimTime - startTime;
-  std::cout << "\nTotal simulation time (seconds): " << totalSimTime.GetSeconds () << "\n";
-  double averageThroughput = ((sink->GetTotalRx () * 8) / (1e6 * totalSimTime.GetSeconds ()));
-  std::cout << "\nAverage throughput: " << averageThroughput << " Mbit/s" << std::endl;
-  std::cout << "\nPackets dropped: " << packetDrops << std::endl;
+  std::cout << "\nTCP Variant: " << tcpVariant << ", Data Rate: " << myDataRate << ", Error Rate: " << myErrorRate << ", Delay: " << myDelay << "\n";
+  std::cout << "Total simulation time (seconds): " << totalSimTime.GetSeconds () << "\n";
+  double averageThroughput = ((sink->GetTotalRx () * 8) / (1 * totalSimTime.GetSeconds ())); //Change to 1e6 for Megabits/s
+  std::cout << "Average throughput: " << averageThroughput << " bit/s" << std::endl;
+  std::cout << "Packets dropped: " << packetDrops << std::endl;
+  std::cout << "Times congestion window changed: " << congestionWindowChanges << std::endl;
   return 0;
 }
 
