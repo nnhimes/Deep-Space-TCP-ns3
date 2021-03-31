@@ -17,7 +17,7 @@ NS_LOG_COMPONENT_DEFINE ("tcpCompare");
 
 // Global Variables
 Time mostRecentSimTime;
-int simulationMaxTime = 500;
+long int simulationMaxTime = 9999999999999;
 Ptr<PacketSink> sink; //Used for average throughput calculations
 int packetDrops;
 
@@ -126,7 +126,7 @@ MyApp::ScheduleTx (void)
 static void
 CwndChange (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  //NS_LOG_UNCOND ("Congestion window at " << Simulator::Now ().GetSeconds () << " is now: " << newCwnd);
+  NS_LOG_UNCOND ("Congestion window at " << Simulator::Now ().GetSeconds () << " is now: " << newCwnd);
 }
 
 static void
@@ -179,7 +179,7 @@ main (int argc, char *argv[])
   nodes.Create (2);
 
   PointToPointHelper pointToPoint;
-  pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
+  pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("50Mbps"));
   pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
 
   NetDeviceContainer devices;
@@ -208,8 +208,8 @@ main (int argc, char *argv[])
   ns3TcpSocket->TraceConnectWithoutContext ("CongestionWindow", MakeCallback (&CwndChange)); //Runs CwndChange() whenever the Congestion Window changes in the TCP socket
 
   Ptr<MyApp> app = CreateObject<MyApp> ();
-  app->Setup (ns3TcpSocket, sinkAddress, 1040, 1000, DataRate ("1Mbps")); //Setup to send 1000 packets of size 1040 bytes with a rate of 1Mbps. Total size: 1040000 bytes
-  // 1040000 bytes == 8,320,000 bits. This / 1,000,000 bits per second = 8.32 seconds. This is what the simulation's total time is, so it works!
+  app->Setup (ns3TcpSocket, sinkAddress, 1500, 1000, DataRate ("50Mbps")); //Setup to send 1000 packets of size 1500 bytes with a rate of 50Mbps. Total size: 1.5MB
+  // 1500000 bytes == 12,000,000 bits. This / 50,000,000 bits per second = 0.24 seconds with low delay. This is what the simulation's total time is, so it works!
   nodes.Get (0)->AddApplication (app);
   app->SetStartTime (Seconds (1.)); //Must remain at 1 second so there is time to start up application and sockets
   app->SetStopTime (Seconds (simulationMaxTime)); //Global variable defined at top
