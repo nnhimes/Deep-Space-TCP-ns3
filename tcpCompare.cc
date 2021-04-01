@@ -25,7 +25,7 @@ int packetDrops;
 int congestionWindowChanges;
 std::string tcpVariant = "TcpCubic";             /* TCP variant type. */
 std::string myDataRate = "50Mbps";
-double myErrorRate = 0.0000025 * 1500;
+double myErrorRate = 0.0000025;
 std::string myDelay = "261s";
 double speedOfLight = 299792458;
 double distanceTraveled; 
@@ -208,6 +208,12 @@ main (int argc, char *argv[])
   devices = pointToPoint.Install (nodes);
 
   Ptr<RateErrorModel> em = CreateObject<RateErrorModel> ();
+  std::string delay = myDelay;
+  delay.pop_back();
+  std::stringstream degree(delay);
+  int delay_int = 0;
+  degree >> delay_int;
+  myErrorRate *= (double) delay_int / 495; //compute a ratio 
   em->SetAttribute ("ErrorRate", DoubleValue (myErrorRate));
   devices.Get (1)->SetAttribute ("ReceiveErrorModel", PointerValue (em));
 
