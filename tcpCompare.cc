@@ -25,7 +25,7 @@ int packetDrops;
 int congestionWindowChanges;
 std::string tcpVariant = "TcpCubic";             /* TCP variant type. */
 std::string myDataRate = "50Mbps";
-double myErrorRate = 0.0000025;
+double myErrorRate = 0.0000025 * 1500;
 std::string myDelay = "261s";
 double speedOfLight = 299792458;
 double distanceTraveled; 
