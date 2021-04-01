@@ -10,6 +10,8 @@
 #include "ns3/internet-module.h"
 #include "ns3/point-to-point-module.h"
 #include "ns3/applications-module.h"
+#include <sstream>
+#include <string>
 
 using namespace ns3;
 
@@ -25,6 +27,8 @@ std::string tcpVariant = "TcpCubic";             /* TCP variant type. */
 std::string myDataRate = "50Mbps";
 double myErrorRate = 0.0000025;
 std::string myDelay = "261s";
+double speedOfLight = 299792458;
+double distanceTraveled; 
 
 // MyApp Definition
 class MyApp : public Application 
@@ -33,7 +37,7 @@ public:
 
   MyApp ();
   virtual ~MyApp();
-
+  void ComputeDistance (void);
   void Setup (Ptr<Socket> socket, Address address, uint32_t packetSize, uint32_t nPackets, DataRate dataRate);
 
 private:
@@ -128,6 +132,18 @@ MyApp::ScheduleTx (void)
     }
 }
 
+void 
+MyApp::ComputeDistance (void)
+{
+  std::string delay = myDelay;
+  delay.pop_back();
+  std::stringstream degree(delay);
+  int delay_int = 0;
+  degree >> delay_int;
+  double distance = speedOfLight * delay_int; // in meters
+  distanceTraveled = distance;
+}
+
 static void
 CwndChange (uint32_t oldCwnd, uint32_t newCwnd)
 {
@@ -217,6 +233,8 @@ main (int argc, char *argv[])
   app->Setup (ns3TcpSocket, sinkAddress, 1500, 1000, DataRate (myDataRate)); //Setup to send 1000 packets of size 1500 bytes with a rate of 50Mbps. Total size: 1.5MB
   // 1500000 bytes == 12,000,000 bits. This / 50,000,000 bits per second = 0.24 seconds with low delay. This is what the simulation's total time is, so it works!
   nodes.Get (0)->AddApplication (app);
+  app->ComputeDistance();
+  std::cout << "Distance being simulated in meters: "<< distanceTraveled << std::endl;
   app->SetStartTime (Seconds (1.)); //Must remain at 1 second so there is time to start up application and sockets
   app->SetStopTime (Seconds (simulationMaxTime)); //Global variable defined at top
 
