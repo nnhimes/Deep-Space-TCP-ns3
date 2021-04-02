@@ -23,7 +23,7 @@ int packetDrops;
 int congestionWindowChanges;
 std::string tcpVariant = "TcpCubic";             /* TCP variant type. */
 std::string myDataRate = "50Mbps";
-double myErrorRate = 0.0000025;
+double myErrorRate = 0.000001; // Reference #13: Performance of bundle protocol for deep-space communications. Around 10^-6 BER
 std::string myDelay = "261s";
 
 // MyApp Definition
@@ -138,7 +138,7 @@ CwndChange (uint32_t oldCwnd, uint32_t newCwnd)
 static void
 RxDrop (Ptr<const Packet> p)
 {
-  NS_LOG_UNCOND ("RxDrop at " << Simulator::Now ().GetSeconds ());
+  //NS_LOG_UNCOND ("RxDrop at " << Simulator::Now ().GetSeconds ());
   packetDrops++;
 }
 
@@ -185,7 +185,7 @@ main (int argc, char *argv[])
   nodes.Create (2);
 
   PointToPointHelper pointToPoint;
-  pointToPoint.SetDeviceAttribute ("DataRate", StringValue (myDataRate));
+  pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("50000Mbps")); //Data rate asymmetry in space is on order of 1000:1. Reference #21
   pointToPoint.SetChannelAttribute ("Delay", StringValue (myDelay));
 
   NetDeviceContainer devices;
@@ -193,6 +193,7 @@ main (int argc, char *argv[])
 
   Ptr<RateErrorModel> em = CreateObject<RateErrorModel> ();
   em->SetAttribute ("ErrorRate", DoubleValue (myErrorRate));
+  em->SetAttribute ("ErrorUnit", StringValue ("ERROR_UNIT_BIT"));
   devices.Get (1)->SetAttribute ("ReceiveErrorModel", PointerValue (em));
 
   InternetStackHelper stack;
