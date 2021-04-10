@@ -21,10 +21,10 @@ long int simulationMaxTime = 9999999999999;
 Ptr<PacketSink> sink; //Used for average throughput calculations
 int packetDrops;
 int congestionWindowChanges;
-std::string tcpVariant = "TcpWestwood";             /* TCP variant type. */
+std::string tcpVariant = "TcpCubic";             /* TCP variant type. */
 std::string myDataRate = "50Mbps";
-double myErrorRate = 0.000001; // Reference #13: Performance of bundle protocol for deep-space communications. Around 10^-6 BER
-std::string myDelay = "25000s";
+double myErrorRate = 0.0001; // Reference #23: Strong solar flares
+std::string myDelay = "1.28s";
 
 // MyApp Definition
 class MyApp : public Application 
