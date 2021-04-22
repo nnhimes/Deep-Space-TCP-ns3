@@ -1,4 +1,4 @@
-/* tcpCompareSolarFlares.cc
+/* tcpComparePacketDrops.cc
 * Written by Nicholas Himes and John Bumgardner
 * ECE 773 Spring 2021
 * 
@@ -23,7 +23,7 @@ int packetDrops;
 int congestionWindowChanges;
 std::string tcpVariant = "TcpCubic";             /* TCP variant type. */
 std::string myDataRate = "50Mbps";
-double myErrorRate = 0.0001; // Reference #23: Strong solar flares
+double myErrorRate = 0.00001; // Reference #13: Performance of bundle protocol for deep-space communications. Around 10^-6 BER *********** changed to 10^-5
 std::string myDelay = "1.28s";
 
 // MyApp Definition
@@ -153,6 +153,7 @@ int
 main (int argc, char *argv[])
 {
   //LogComponentEnable("TcpL4Protocol", LOG_LEVEL_LOGIC);
+  SeedManager::SetSeed(10);
 
   CommandLine cmd (__FILE__);
   //cmd.AddValue ("payloadSize", "Payload size in bytes", payloadSize);
@@ -215,8 +216,8 @@ main (int argc, char *argv[])
   ns3TcpSocket->TraceConnectWithoutContext ("CongestionWindow", MakeCallback (&CwndChange)); //Runs CwndChange() whenever the Congestion Window changes in the TCP socket
 
   Ptr<MyApp> app = CreateObject<MyApp> ();
-  app->Setup (ns3TcpSocket, sinkAddress, 1500, 1000, DataRate (myDataRate)); //Setup to send 1000 packets of size 1500 bytes with a rate of 50Mbps. Total size: 1.5MB
-  // 1500000 bytes == 12,000,000 bits. This / 50,000,000 bits per second = 0.24 seconds with low delay. This is what the simulation's total time is, so it works!
+  app->Setup (ns3TcpSocket, sinkAddress, 1500, 200000, DataRate (myDataRate)); //Setup to send 200,000 packets of size 1500 bytes with a rate of 50Mbps. Total size: 300MB
+  
   nodes.Get (0)->AddApplication (app);
   app->SetStartTime (Seconds (1.)); //Must remain at 1 second so there is time to start up application and sockets
   app->SetStopTime (Seconds (simulationMaxTime)); //Global variable defined at top
